@@ -17,6 +17,7 @@ const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
 };
+// homepage
 app.use(express.urlencoded({ extended: true }));
 app.get("/", (req, res) => {
   res.send("Hello!");
@@ -42,14 +43,18 @@ app.post("/urls", (req, res) => {
   res.redirect(`/urls/${shortUrl}`);
 });
 //redirect to long url
-app.get("/u/:shortURL", (req, res) => {
+app.get("/urls/:shortURL", (req, res) => {
   res.redirect(urlDatabase[req.params.shortURL]);
 });
 //delete functionality
 app.post("/urls/:shortURL/delete", (req, res) => {
-  delete(urlDatabase[req.params.shortURL]);
+  delete (urlDatabase[req.params.shortURL]);
   res.redirect("/urls");
 });
+app.post("/urls/:shortURL", (req, res) => {
+  urlDatabase[req.params.shortURL] = req.body.longURL;;
+  res.redirect("/urls");
+})
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
