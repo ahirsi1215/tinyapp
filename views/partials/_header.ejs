@@ -10,15 +10,15 @@
         <a class="nav-item nav-link" href="/urls">My URLs</a>
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
       </div>
-      <% if (username !== undefined) { %>
+      <% if (user !== undefined) { %>
     </div class ="collapse navbar-collapse" id="navbarNavAltMarkup">
         <form method="POST" action="/logout">
-        <h3>Logged in as: <%= username %> User! </h3>
+        <h3>Logged in as: <%= user.email %> User! </h3>
         <button style="float: right;" class="btn btn-primary" type="submit">Logout</button>
       </div>
       <% } else { %>
         <form method="POST" action="/login">
-          <input class="form-control" type="text" name="username" placeholder="Username Sign-in"/>
+          <input class="form-control" type="email" name="email" placeholder="Email Sign-in"/>
         </div>
           <button class="btn btn-primary" type="submit">Login</button>
         </form>
