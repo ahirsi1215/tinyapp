@@ -12,14 +12,14 @@
         <a class="nav-item nav-link" href="/register">Register</a>
         <a class="nav-item nav-link" href="/login">Login</a>
       </div>
-      <% if (user !== undefined) { %>
+      <% if (user) { %>
     </div class ="collapse navbar-collapse" id="navbarNavAltMarkup">
         <form method="POST" action="/logout">
-        <h3>Logged in as: <%= user.email %> User! </h3>
+        <h4>Logged in as: <%= user.email %> User! </h4>
         <button style="float: right;" class="btn btn-primary" type="submit">Logout</button>
       </div>
       <% } else { %>
-        <form method="POST" action="/login">
+        <form method="GET" action="/login">
         </div>
           <button class="btn btn-primary" type="submit">Login</button>
         </form>
