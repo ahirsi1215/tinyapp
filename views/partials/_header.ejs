@@ -12,7 +12,7 @@
         <a class="nav-item nav-link" href="/register">Register</a>
         <a class="nav-item nav-link" href="/login">Login</a>
       </div>
-      <% if (user) { %>
+      <% if (typeof !user == 'undefined') { %>
     </div class ="collapse navbar-collapse" id="navbarNavAltMarkup">
         <form method="POST" action="/logout">
         <h4>Logged in as: <%= user.email %> User! </h4>

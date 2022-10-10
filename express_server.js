@@ -8,7 +8,7 @@ const bcrypt = require('bcryptjs');
 // middleware
 app.use(cookieSession({
   name: 'session',
-  keys: ['key123'],
+  keys: ['asdfw23'],
   maxAge: 24 * 60 * 60 * 1000 // 24 hours
 }))
 
@@ -80,9 +80,9 @@ app.get("/urls", (req, res) => {
 });
 // creating a tinyurl page
 app.get("/urls/new", (req, res) => {
-  if (!users[req.session["user_id"]]) {
-    return res.redirect("/login");
-  }
+  // if (!users[req.session["user_id"]]) {
+  //   return res.redirect("/login");
+  // }
   const templateVars = {
     urls: urlDatabase,
     user: users[req.session["user_id"]]
@@ -95,21 +95,22 @@ app.get("/urls/:id", (req, res) => {
     return res.send("You need to Login");
   }
   let shortURL = req.params.id;
-  if (!urlBelongsToUser(shortURL, req.session.user_id)) {
+  if (!urlsForUser(shortURL, req.session.user_id)) {
     return res.send("Unauthorized Access ");
   }
-  const templateVars = { 
-    id: req.params.id, 
-    longURL: urlDatabase[req.params.id], 
-    user: users[req.session["user_id"]]  };
+  const templateVars = {
+    id: req.params.id,
+    longURL: urlDatabase[req.params.id],
+    user: users[req.session["user_id"]]
+  };
   res.render("urls_show", templateVars);
 });
 //login page
 app.get("/login", (req, res) => {
   const templateVars = {
-    user: users[req.session["user_id"]] }; 
+    user: users[req.session["user_id"]]
+  };
   res.render("login", templateVars);
-  res.redirect("/urls");
 })
 // registration page
 app.get("/register", (req, res) => {
@@ -117,7 +118,8 @@ app.get("/register", (req, res) => {
     res.redirect("/urls");
   }
   const templateVars = {
-    user: users[req.session["user_id"]] }; 
+    user: users[req.session["user_id"]]
+  };
   res.render("register", templateVars);
 })
 //generate random string for url link
@@ -133,10 +135,10 @@ app.post("/urls/:id/delete", (req, res) => {
 });
 //edit..seems to be deleting need to fix
 app.get("/urls/:id/edit", (req, res) => {
-  urlDatabase[req.params.id].longURL = req.body.longURL;
+  urlDatabase[req.params.id] = req.body.longURL;
   return res.redirect("/urls")
-}) 
-app.post("/urls/:id", (req, res) => {
+})
+app.post("/urls/shortURL", (req, res) => {
   urlDatabase[req.params.shortURL] = req.body.longURL;
   res.redirect("/urls");
 })
@@ -144,7 +146,7 @@ app.post("/urls/:id", (req, res) => {
 app.post("/login", (req, res) => {
   const password = req.body.password;
   const userId = urlsForUser(req.body.email, users);
-  if(userId === undefined) {
+  if (userId === undefined) {
     return res.status(404).send("Error email not found");
   };
   // if(password)
