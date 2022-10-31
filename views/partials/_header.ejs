@@ -15,7 +15,7 @@
       <% if (userId) { %>
     </div class ="collapse navbar-collapse" id="navbarNavAltMarkup">
         <form method="POST" action="/logout">
-        <h4>Logged in as: <%= user.email %> User! </h4>
+        <h4>Logged in as: <%= userId.email %> User! </h4>
         <button style="float: right;" class="btn btn-primary" type="submit">Logout</button>
       </div>
       <% } else { %>

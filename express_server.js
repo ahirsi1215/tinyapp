@@ -65,7 +65,7 @@ app.get("/urls/:id", (req, res) => {
 //login page
 app.get("/login", (req, res) => {
   const templateVars = {
-    user: users[req.session.user_id].longURL
+    userId: users[req.session.user_id]
   };
   res.render("login", templateVars);
 })
@@ -82,10 +82,11 @@ app.get("/register", (req, res) => {
 //generate random string for url link
 app.post("/urls", (req, res) => {
   const shortUrl = generateRandomString();
-  const newid = generateRandomString();
-  urlDatabase[shortUrl] = { 
-    longURL: req.body['longURL'], 
-    userId: req.session.user_id};
+  const userId = req.session.user_id;
+  const longURL = req.body.longURL;
+  const url = { userId, longURL };
+  
+  urlDatabase[shortUrl] = url;
   res.redirect(`/urls/${shortUrl}`);
 });
 app.post("/urls/:id", (req, res) => {
@@ -106,10 +107,6 @@ app.get("/urls/:id/edit", (req, res) => {
   urlDatabase[req.params.id] = req.body.longURL;
   return res.redirect("/urls")
 })
-// app.post("/urls/shortURL", (req, res) => {
-//   urlDatabase[req.params.shortURL] = req.body.longURL;
-//   res.redirect("/urls");
-// })
 // login
 app.post("/login", (req, res) => {
   const email = req.body.email;
