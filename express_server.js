@@ -126,6 +126,7 @@ app.post("/login", (req, res) => {
 });
 // logout the user
 app.post("/logout", (req, res) => {
+  req.session = null;
   res.redirect("/urls");
 });
 // register the user
