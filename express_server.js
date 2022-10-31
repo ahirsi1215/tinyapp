@@ -111,18 +111,21 @@ app.post("/urls/shortURL", (req, res) => {
 })
 // login
 app.post("/login", (req, res) => {
-  const hiddenPw = bcrypt.hashSync(req.body.password, 10);
-  const userId = urlsForUser(req.body.email, users);
-  if (userId === undefined) {
-    return res.status(404).send("Error email not found");
-  };
-  users[userId] = {
-    id: userId,
-    email: req.body.email,
-    password: hiddenPw
+  const email = req.body.email;
+  const password = req.body.password;
+  if (!getUserByEmail(email, users)) {
+    res.status(403).send('User cannot be found');
   }
-  req.session.user_id = users[userId].id
-  res.redirect('/urls');
+
+  if (getUserByEmail(email, users)) {
+    const findPw = users[getUserByEmail(email, users)].password;
+    if (bcrypt.compareSync(password, findPw)) { 
+      req.session.user_id = getUserByEmail(email, users);
+      res.redirect('/urls');
+    } else {
+      res.status(403).send('Incorrect Password');
+    }
+  }
 });
 // logout the user
 app.post("/logout", (req, res) => {
@@ -131,21 +134,24 @@ app.post("/logout", (req, res) => {
 });
 // register the user
 app.post("/register", (req, res) => {
+  const username = req.body.email;
+  const user = getUserByEmail(username, users);
   const hiddenPw = bcrypt.hashSync(req.body.password, 10);
   if (!req.body.email) {
     return res.status(404).send("Empty field Error.");
   };
-  if (getUserByEmail(req.body.email)) {
+  if (user) {
     return res.status(404).send("Already registered user try again.")
-  };
+  } else {
   const userId = generateRandomString();
   users[userId] = {
     id: userId,
     email: req.body.email,
     password: hiddenPw
   }
-  req.session.user_id = users[userId].id
+  req.session.user_id = userId;
   res.redirect("/urls");
+}
 });
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
