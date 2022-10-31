@@ -38,41 +38,34 @@ app.get("/urls.json", (req, res) => {
 app.get("/urls", (req, res) => {
   const templateVars = {
     urls: urlDatabase,
-    user: users[req.session.user_id]
+    userId: users[req.session.user_id]
   };
   res.render("urls_index", templateVars);
 });
 // creating a tinyurl page
 app.get("/urls/new", (req, res) => {
   const templateVars = {
-    user: users[req.session.user_id]
+    userId: users[req.session.user_id]
   };
   res.render("urls_new", templateVars);
 });
-app.get("/u/:shortUrl", (req, res) => {
-  const longUrl = urlDatabase[req.params.id].longUrl;
-  res.redirect(longUrl);
+app.get("/u/:id", (req, res) => {
+  const longURL = urlDatabase[req.params.id].longURL;
+  res.redirect(longURL);
 });
-// main page that shows urls, edit and delete
-app.get("/urls/:shortUrl", (req, res) => {
-  if (!req.session.user_id) {
-    return res.send("You need to Login");
-  }
-  let shortURL = req.params.id;
-  if (!urlsForUser(shortURL, req.session.user_id)) {
-    return res.send("Unauthorized Access ");
-  }
+
+app.get("/urls/:id", (req, res) => {
   const templateVars = {
+    userId: users[req.session.user_id],
     id: req.params.id,
-    longURL: urlDatabase[req.params.id],
-    user: users[req.session.user_id]
+    longURL: urlDatabase[req.params.id].longURL
   };
   res.render("urls_show", templateVars);
 });
 //login page
 app.get("/login", (req, res) => {
   const templateVars = {
-    user: users[req.session.user_id]
+    user: users[req.session.user_id].longURL
   };
   res.render("login", templateVars);
 })
@@ -82,18 +75,26 @@ app.get("/register", (req, res) => {
     res.redirect("/urls");
   }
   const templateVars = {
-    user: users[req.session.user_id]
+    userId: users[req.session.user_id]
   };
   res.render("register", templateVars);
 })
 //generate random string for url link
 app.post("/urls", (req, res) => {
   const shortUrl = generateRandomString();
-  urlDatabase[shortUrl] = {
-    longURL: req.body.longURL,
-    userID: req.session.user_id,
-  };
+  const newid = generateRandomString();
+  urlDatabase[shortUrl] = { 
+    longURL: req.body['longURL'], 
+    userId: req.session.user_id};
   res.redirect(`/urls/${shortUrl}`);
+});
+app.post("/urls/:id", (req, res) => {
+  if (req.params.id)
+    console.log(req.body);
+  urlDatabase[req.params.id] = { 
+    longURL: req.body['longURL'], 
+    userId: req.session.user_id};
+  res.redirect("/urls");
 });
 //delete functionality
 app.post("/urls/:id/delete", (req, res) => {
@@ -105,10 +106,10 @@ app.get("/urls/:id/edit", (req, res) => {
   urlDatabase[req.params.id] = req.body.longURL;
   return res.redirect("/urls")
 })
-app.post("/urls/shortURL", (req, res) => {
-  urlDatabase[req.params.shortURL] = req.body.longURL;
-  res.redirect("/urls");
-})
+// app.post("/urls/shortURL", (req, res) => {
+//   urlDatabase[req.params.shortURL] = req.body.longURL;
+//   res.redirect("/urls");
+// })
 // login
 app.post("/login", (req, res) => {
   const email = req.body.email;
