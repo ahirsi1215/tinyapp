@@ -15,18 +15,7 @@ app.use(cookieSession({
 app.set("view engine", "ejs");
 // random string function
 //users object
-const users = {
-  userRandomID: {
-    id: "userRandomID",
-    email: "user@example.com",
-    password: "purple-monkey-dinosaur",
-  },
-  user2RandomID: {
-    id: "user2RandomID",
-    email: "user2@example.com",
-    password: "dishwasher-funk",
-  },
-};
+const users = {};
 // default websites used for edit/test and showing
 const urlDatabase = {
   b6UTxQ: {
