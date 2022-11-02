@@ -6,23 +6,26 @@
       <span class="navbar-toggler-icon"></span>
     </button>
     <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
-      <div class="navbar-nav">
-        <a class="nav-item nav-link" href="/urls">My URLs</a>
-        <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
-        <a class="nav-item nav-link" href="/register">Register</a>
-        <a class="nav-item nav-link" href="/login">Login</a>
-      </div>
-      <% if (userId) { %>
-    </div class ="collapse navbar-collapse" id="navbarNavAltMarkup">
-        <form method="POST" action="/logout">
-        <h4>Logged in as: <%= userId.email %> User! </h4>
-        <button style="float: right;" class="btn btn-primary" type="submit">Logout</button>
-      </div>
-      <% } else { %>
+      <% if (!userId) { %>
+        <div class="navbar-nav">
+          <a class="nav-item nav-link" href="/register">Register</a>
+          <a class="nav-item nav-link" href="/login">Login</a>
+        </div>
         <form method="GET" action="/login">
         </div>
           <button class="btn btn-primary" type="submit">Login</button>
-        </form>   
+        </form> 
+      <% } else { %>
+        <div class="navbar-nav">
+          <a class="nav-item nav-link" href="/urls">My URLs</a>
+          <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
+        </div>
+      </div class ="collapse navbar-collapse" id="navbarNavAltMarkup">
+      <form method="POST" action="/logout">
+      <h4>Logged in as: <%= userId.email %> User! </h4>
+      <button style="float: right;" class="btn btn-primary" type="submit">Logout</button>
+      </form>
+    </div> 
         <% } %> 
       </div>
     </div>
