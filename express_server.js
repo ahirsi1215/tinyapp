@@ -2,7 +2,7 @@ const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
 var cookieSession = require('cookie-session')
-const { generateRandomString, getUserByEmail, urlsForUser, urlDatabase } = require('./helpers');
+const { generateRandomString, getUserByEmail, urlsForUser, urlDatabase, users } = require('./helpers');
 const { restart } = require("nodemon");
 const bcrypt = require('bcryptjs');
 
@@ -13,20 +13,21 @@ app.use(cookieSession({
   maxAge: 24 * 60 * 60 * 1000 // 24 hours
 }))
 app.set("view engine", "ejs");
-// random string function
-//users object
-const users = {};
-// default websites used for edit/test and showing
+
+// Get Routes
 // homepage
 app.use(express.urlencoded({ extended: true }));
 app.get("/", (req, res) => {
   res.send("/urls");
 });
+
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
+
 app.get("/urls", (req, res) => {
-  if (!req.session.user_id){
+  // if user not signed in redirect to login
+  if (!req.session.user_id) {
     res.redirect("/login")
   }
   const templateVars = {
@@ -35,8 +36,10 @@ app.get("/urls", (req, res) => {
   };
   res.render("urls_index", templateVars);
 });
-// creating a tinyurl page
+
+
 app.get("/urls/new", (req, res) => {
+  // if user not signed in redirect to login
   if (!req.session.user_id) {
     return res.redirect('/login');
   }
@@ -46,12 +49,13 @@ app.get("/urls/new", (req, res) => {
   };
   res.render("urls_new", templateVars);
 });
+// user can see existing and created URLs
 app.get("/u/:id", (req, res) => {
   const longURL = urlDatabase[req.params.id].longURL;
   res.redirect(longURL);
 });
+
 app.get("/urls/:id", (req, res) => {
-  console.log(urlDatabase)
   const templateVars = {
     userId: users[req.session.user_id],
     id: req.params.id,
@@ -59,6 +63,7 @@ app.get("/urls/:id", (req, res) => {
   };
   res.render("urls_show", templateVars);
 });
+
 //login page
 app.get("/login", (req, res) => {
   const templateVars = {
@@ -76,38 +81,44 @@ app.get("/register", (req, res) => {
   };
   res.render("register", templateVars);
 })
-//generate random string for url link
+// Edit Url
+app.get("/urls/:id/edit", (req, res) => {
+  urlDatabase[req.params.id] = req.body.longURL;
+  return res.redirect("/urls")
+})
+
+
+/// Post routes
+//generate random string for shortUrl and redirect to it
 app.post("/urls", (req, res) => {
   const userId = req.session.user_id;
   if (!userId) {
     return res.send("Error login first!");
-   }
-  console.log("inside post route")
+  }
   const shortUrl = generateRandomString();
   const longURL = req.body.longURL;
   const templateVars = { userId, longURL };
   urlDatabase[shortUrl] = templateVars;
   res.redirect(`/urls/${shortUrl}`);
 });
+
 app.post("/urls/:id", (req, res) => {
   if (req.params.id)
     console.log(req.body);
-  urlDatabase[req.params.id] = { 
-    longURL: req.body.longURL, 
-    userId: req.session.user_id};
+  urlDatabase[req.params.id] = {
+    longURL: req.body.longURL,
+    userId: req.session.user_id
+  };
   res.redirect("/urls");
 });
-//delete functionality
+
+// Delete Url
 app.post("/urls/:id/delete", (req, res) => {
   delete (urlDatabase[req.params.id]);
   res.redirect("/urls");
 });
-//edit..seems to be deleting need to fix
-app.get("/urls/:id/edit", (req, res) => {
-  urlDatabase[req.params.id] = req.body.longURL;
-  return res.redirect("/urls")
-})
-// login
+
+// Login
 app.post("/login", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
@@ -117,7 +128,7 @@ app.post("/login", (req, res) => {
 
   if (getUserByEmail(email, users)) {
     const findPw = users[getUserByEmail(email, users)].password;
-    if (bcrypt.compareSync(password, findPw)) { 
+    if (bcrypt.compareSync(password, findPw)) {
       req.session.user_id = getUserByEmail(email, users);
       res.redirect('/urls');
     } else {
@@ -125,32 +136,39 @@ app.post("/login", (req, res) => {
     }
   }
 });
+
 // logout the user
 app.post("/logout", (req, res) => {
   req.session = null;
   res.redirect("/login");
 });
-// register the user
+
+// Register the user
 app.post("/register", (req, res) => {
   const username = req.body.email;
+  const password = req.body.password;
   const user = getUserByEmail(username, users);
   const hiddenPw = bcrypt.hashSync(req.body.password, 10);
-  if (!req.body.email) {
+  if (!username) {
     return res.status(404).send("Empty field Error.");
   };
+  if (!username || !password) {
+    return res.status(404).send("Error one of the fields are empty!")
+  }
   if (user) {
     return res.status(404).send("Already registered user try again.")
   } else {
-  const userId = generateRandomString();
-  users[userId] = {
-    id: userId,
-    email: req.body.email,
-    password: hiddenPw
+    const userId = generateRandomString();
+    users[userId] = {
+      id: userId,
+      email: req.body.email,
+      password: hiddenPw
+    }
+    req.session.user_id = userId;
+    res.redirect("/urls");
   }
-  req.session.user_id = userId;
-  res.redirect("/urls");
-}
 });
+
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });

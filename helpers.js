@@ -32,4 +32,5 @@ const urlDatabase = {
     userID: "aJ48lW",
   },
 };
-module.exports = { generateRandomString, getUserByEmail, urlsForUser, urlDatabase };
+const users = {};
+module.exports = { generateRandomString, getUserByEmail, urlsForUser, urlDatabase, users };
