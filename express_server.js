@@ -18,7 +18,13 @@ app.set("view engine", "ejs");
 // homepage
 app.use(express.urlencoded({ extended: true }));
 app.get("/", (req, res) => {
+  const userId = req.session.user_id
+  if(!userId){
+    res.redirect("/login")
+  }
+  if(userId){
   res.send("/urls");
+  }
 });
 
 app.get("/urls.json", (req, res) => {
@@ -27,14 +33,15 @@ app.get("/urls.json", (req, res) => {
 
 app.get("/urls", (req, res) => {
   // if user not signed in redirect to login
-  if (!req.session.user_id) {
-    res.redirect("/login")
-  }
   const templateVars = {
     urls: urlDatabase,
     userId: users[req.session.user_id]
   };
+  if (!req.session.user_id) {
+    res.redirect("/login")
+  }else { 
   res.render("urls_index", templateVars);
+  }
 });
 
 
@@ -56,6 +63,9 @@ app.get("/u/:id", (req, res) => {
 });
 
 app.get("/urls/:id", (req, res) => {
+   if (req.session.user_id !== urlDatabase[req.params.id].userId) {
+    res.status(403).send("Error this url does not belong to the user");
+  } 
   const templateVars = {
     userId: users[req.session.user_id],
     id: req.params.id,
@@ -103,11 +113,16 @@ app.post("/urls", (req, res) => {
 });
 
 app.post("/urls/:id", (req, res) => {
-  if (req.params.id)
-    console.log(req.body);
+  const user = req.session.user_id;
+  if (!user) {
+    res.send('Error Login is required!');
+  }
+  if (user !== urlDatabase[req.params.id].userId) {
+    res.status(403).send("Error this url does not belong to the user");
+  } 
   urlDatabase[req.params.id] = {
     longURL: req.body.longURL,
-    userId: req.session.user_id
+    userId: user
   };
   res.redirect("/urls");
 });
@@ -120,21 +135,18 @@ app.post("/urls/:id/delete", (req, res) => {
 
 // Login
 app.post("/login", (req, res) => {
-  const email = req.body.email;
-  const password = req.body.password;
-  if (!getUserByEmail(email, users)) {
+  const username = req.body.email;
+  const user = getUserByEmail(username, users);
+  if (!user) {
     res.status(403).send('User cannot be found');
   }
-
-  if (getUserByEmail(email, users)) {
-    const findPw = users[getUserByEmail(email, users)].password;
-    if (bcrypt.compareSync(password, findPw)) {
-      req.session.user_id = getUserByEmail(email, users);
+    if (bcrypt.compareSync(req.body.password, user.password)) {
+      req.session.user_id = user.id
       res.redirect('/urls');
+
     } else {
       res.status(403).send('Incorrect Password');
     }
-  }
 });
 
 // logout the user
@@ -149,13 +161,11 @@ app.post("/register", (req, res) => {
   const password = req.body.password;
   const user = getUserByEmail(username, users);
   const hiddenPw = bcrypt.hashSync(req.body.password, 10);
-  if (!username) {
-    return res.status(404).send("Empty field Error.");
-  };
+ 
   if (!username || !password) {
     return res.status(404).send("Error one of the fields are empty!")
   }
-  if (user) {
+  else if (user) {
     return res.status(404).send("Already registered user try again.")
   } else {
     const userId = generateRandomString();
