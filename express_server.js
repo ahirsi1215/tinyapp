@@ -34,9 +34,10 @@ app.get("/urls.json", (req, res) => {
 app.get("/urls", (req, res) => {
   // if user not signed in redirect to login
   const templateVars = {
-    urls: urlDatabase,
+    urls: urlsForUser(req.session.user_id, urlDatabase),
     userId: users[req.session.user_id]
   };
+  console.log(urlDatabase)
   if (!req.session.user_id) {
     res.redirect("/login")
   }else { 
@@ -56,14 +57,12 @@ app.get("/urls/new", (req, res) => {
   };
   res.render("urls_new", templateVars);
 });
-// user can see existing and created URLs
-app.get("/u/:id", (req, res) => {
-  const longURL = urlDatabase[req.params.id].longURL;
-  res.redirect(longURL);
-});
-
+// 
 app.get("/urls/:id", (req, res) => {
-   if (req.session.user_id !== urlDatabase[req.params.id].userId) {
+  if (!urlDatabase[req.params.id]){
+    return res.status(403).send("This doesnt exist")
+  }
+   if (req.session.user_id !== urlDatabase[req.params.id].userID) {
     res.status(403).send("Error this url does not belong to the user");
   } 
   const templateVars = {
@@ -73,7 +72,11 @@ app.get("/urls/:id", (req, res) => {
   };
   res.render("urls_show", templateVars);
 });
-
+//
+app.get("/u/:id", (req, res) => {
+  const longURL = urlDatabase[req.params.id].longURL;
+  res.redirect(longURL);
+});
 //login page
 app.get("/login", (req, res) => {
   const templateVars = {
@@ -101,13 +104,13 @@ app.get("/urls/:id/edit", (req, res) => {
 /// Post routes
 //generate random string for shortUrl and redirect to it
 app.post("/urls", (req, res) => {
-  const userId = req.session.user_id;
-  if (!userId) {
+  const userID = req.session.user_id;
+  if (!userID) {
     return res.send("Error login first!");
   }
   const shortUrl = generateRandomString();
   const longURL = req.body.longURL;
-  const templateVars = { userId, longURL };
+  const templateVars = { userID, longURL };
   urlDatabase[shortUrl] = templateVars;
   res.redirect(`/urls/${shortUrl}`);
 });
@@ -117,19 +120,19 @@ app.post("/urls/:id", (req, res) => {
   if (!user) {
     res.send('Error Login is required!');
   }
-  if (user !== urlDatabase[req.params.id].userId) {
+  if (user !== urlDatabase[req.params.id].userID) {
     res.status(403).send("Error this url does not belong to the user");
   } 
   urlDatabase[req.params.id] = {
     longURL: req.body.longURL,
-    userId: user
+    userID: user
   };
   res.redirect("/urls");
 });
 
 // Delete Url
 app.post("/urls/:id/delete", (req, res) => {
-  if (req.session.user_id !== urlDatabase[req.params.id].userId) {
+  if (req.session.user_id !== urlDatabase[req.params.id].userID) {
   res.status(403).send("Error this url does not belong to the user");
   } else {
   delete (urlDatabase[req.params.id]);
