@@ -129,8 +129,12 @@ app.post("/urls/:id", (req, res) => {
 
 // Delete Url
 app.post("/urls/:id/delete", (req, res) => {
+  if (req.session.user_id !== urlDatabase[req.params.id].userId) {
+    res.status(403).send("Error this url does not belong to the user");
+  } else {
   delete (urlDatabase[req.params.id]);
   res.redirect("/urls");
+  }
 });
 
 // Login
